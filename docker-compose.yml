@@ -4,15 +4,15 @@ services:
   file-conversion-api:
     build: .
     ports:
-      - "8080:8080"
+      - "30009:30009"
     environment:
-      - PORT=8080
+      - PORT=30009
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - FILE_CONVERSION_API_KEY=${FILE_CONVERSION_API_KEY:-dev-file-conversion-key}
       - RAPIDAPI_PROXY_SECRET=${RAPIDAPI_PROXY_SECRET:-}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/healthz"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:30009/healthz"]
       interval: 30s
       timeout: 10s
       retries: 3
