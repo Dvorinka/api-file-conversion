@@ -1,0 +1,226 @@
+openapi: 3.0.3
+info:
+  title: File Conversion API
+  description: API for converting files between different formats
+  version: 1.0.0
+  contact:
+    name: API Services
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8089
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+paths:
+  /healthz:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the service
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /v1/convert/file:
+    post:
+      summary: Convert single file
+      description: Convert a single file to a different format
+      tags:
+        - File Conversion
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - target_format
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to convert
+                target_format:
+                  type: string
+                  description: Target format to convert to
+                  example: "pdf"
+      responses:
+        '200':
+          description: Successful file conversion response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ConversionResult'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/convert/batch:
+    post:
+      summary: Convert multiple files
+      description: Convert multiple files in a single request using base64 encoding
+      tags:
+        - File Conversion
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchConvertInput'
+      responses:
+        '200':
+          description: Successful batch conversion response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ConversionResult'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    BatchConvertInput:
+      type: object
+      required:
+        - jobs
+      properties:
+        jobs:
+          type: array
+          description: Array of conversion jobs
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/JobInput'
+
+    JobInput:
+      type: object
+      required:
+        - filename
+        - target_format
+        - file_base64
+      properties:
+        filename:
+          type: string
+          description: Original filename
+          example: "document.docx"
+        target_format:
+          type: string
+          description: Target format to convert to
+          example: "pdf"
+        file_base64:
+          type: string
+          description: Base64 encoded file content
+          example: "U29tZSBjb250ZW50IGhlcmUuLi4="
+
+    ConversionResult:
+      type: object
+      properties:
+        filename:
+          type: string
+          description: Original filename
+          example: "document.docx"
+        output_filename:
+          type: string
+          description: Generated output filename
+          example: "document.pdf"
+        source_format:
+          type: string
+          description: Detected source format
+          example: "docx"
+        target_format:
+          type: string
+          description: Target format
+          example: "pdf"
+        output_mime:
+          type: string
+          description: MIME type of output file
+          example: "application/pdf"
+        output_base64:
+          type: string
+          description: Base64 encoded output file content
+          example: "JVBERi0xLjQK..."
+        size_bytes:
+          type: integer
+          description: Size of output file in bytes
+          example: 15360
+        error:
+          type: string
+          description: Error message if conversion failed
+          example: "unsupported format"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "target_format is required"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: API key for authentication (format: "Bearer YOUR_API_KEY")
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: File Conversion
+    description: File format conversion functionality
