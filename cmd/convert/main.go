@@ -18,7 +18,7 @@ import (
 func main() {
 	logger := log.New(os.Stdout, "[convert] ", log.LstdFlags)
 
-	port := envString("PORT", "8089")
+	port := envString("PORT", "30006")
 	apiKey := envString("CONVERT_API_KEY", "dev-convert-key")
 	maxUploadMB := envInt("CONVERT_MAX_UPLOAD_MB", 25)
 	if apiKey == "dev-convert-key" {
