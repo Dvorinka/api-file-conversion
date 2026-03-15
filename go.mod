@@ -1,4 +1,4 @@
-module file-conversion
+module apiservices/file-conversion
 
 go 1.25.7
 
