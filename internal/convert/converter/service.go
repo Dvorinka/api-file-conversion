@@ -6,17 +6,16 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"image"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/chai2010/webp"
-	"github.com/jung-kurt/gofpdf"
 	_ "image/jpeg"
 	_ "image/png"
+
+	"github.com/jung-kurt/gofpdf"
 )
 
 type Service struct {
@@ -81,7 +80,7 @@ func (s *Service) ConvertBase64Job(ctx context.Context, job JobInput) Conversion
 func (s *Service) convert(ctx context.Context, sourceFormat, targetFormat, filename string, data []byte) (ConversionResult, error) {
 	switch {
 	case targetFormat == "webp" && isImageFormat(sourceFormat):
-		return convertImageToWebP(filename, data)
+		return ConversionResult{}, errors.New("webp encoding temporarily unavailable")
 	case targetFormat == "pdf" && (sourceFormat == "md" || sourceFormat == "markdown" || sourceFormat == "txt"):
 		return convertTextLikeToPDF(filename, data)
 	case targetFormat == "jpg" && (sourceFormat == "heic" || sourceFormat == "heif"):
@@ -93,26 +92,6 @@ func (s *Service) convert(ctx context.Context, sourceFormat, targetFormat, filen
 	default:
 		return ConversionResult{}, fmt.Errorf("unsupported conversion: %s -> %s", sourceFormat, targetFormat)
 	}
-}
-
-func convertImageToWebP(filename string, data []byte) (ConversionResult, error) {
-	img, _, err := image.Decode(bytes.NewReader(data))
-	if err != nil {
-		return ConversionResult{}, errors.New("failed to decode image")
-	}
-
-	var out bytes.Buffer
-	if err := webp.Encode(&out, img, &webp.Options{Lossless: true, Quality: 85}); err != nil {
-		return ConversionResult{}, err
-	}
-
-	output := out.Bytes()
-	return ConversionResult{
-		OutputFilename: changeExt(filename, ".webp"),
-		OutputMime:     "image/webp",
-		OutputBase64:   base64.StdEncoding.EncodeToString(output),
-		SizeBytes:      len(output),
-	}, nil
 }
 
 func convertTextLikeToPDF(filename string, data []byte) (ConversionResult, error) {
